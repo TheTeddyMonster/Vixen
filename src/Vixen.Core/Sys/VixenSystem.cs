@@ -237,6 +237,7 @@ namespace Vixen.Sys
 			Execution.initInstrumentation();
 			DataFlow = new DataFlowManager();
 			Elements = new ElementManager();
+			Nodes?.Dispose();
 			Nodes = new NodeManager();
 			OutputControllers = new OutputControllerManager(
 				new OutputDeviceCollection<OutputController>(),

@@ -5,7 +5,7 @@ using Vixen.IO.JSON;
 
 namespace Vixen.Sys.Managers
 {
-	public class NodeManager : IEnumerable<ElementNode>
+	public class NodeManager : IEnumerable<ElementNode>, IDisposable
 	{
 		// a mapping of element node GUIDs to element node instances. Used for initial creation, to easily find nodes we have already created.
 		// once they've been created, they're in the dictionary. The only way to 'delete' elementNodes is to make a new NodeManager,
@@ -30,6 +30,16 @@ namespace Vixen.Sys.Managers
 		private void ElementNode_Changed(object? sender, EventArgs e)
 		{
 			OnNodesChanged();
+		}
+
+		/// <summary>
+		/// Unsubscribes this manager from the static <see cref="ElementNode.Changed"/> event.
+		/// Call this when the manager is being replaced (for example when the system configuration is reloaded);
+		/// otherwise the static event keeps this manager, and every node it holds, alive for the life of the application.
+		/// </summary>
+		public void Dispose()
+		{
+			ElementNode.Changed -= ElementNode_Changed;
 		}
 
 		public ElementNode RootNode => _rootNode??= new ElementNode("Root");
