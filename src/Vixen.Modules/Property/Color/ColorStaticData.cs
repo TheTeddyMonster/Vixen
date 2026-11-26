@@ -8,6 +8,15 @@ namespace VixenModules.Property.Color
 	{
 		public static event EventHandler<StringEventArgs> ColorSetChanged;
 
+		private static int _colorSetsVersion;
+
+		/// <summary>
+		/// Gets a number that increases each time a color set is changed through <see cref="SetColorSet"/>.
+		/// Color properties compare it with the value they saw when they cached a color set, so they can
+		/// re-read the color set without subscribing to <see cref="ColorSetChanged"/>.
+		/// </summary>
+		internal static int ColorSetsVersion => Volatile.Read(ref _colorSetsVersion);
+
 		[DataMember]
 		private Dictionary<string, ColorSet> ColorSets { get; set; }
 
@@ -46,6 +55,7 @@ namespace VixenModules.Property.Color
 			if (!ColorSets.ContainsKey(name))
 				ColorSets.Add(name, value);
 			ColorSets[name] = value;
+			Interlocked.Increment(ref _colorSetsVersion);
 			if (ColorSetChanged != null)
 				ColorSetChanged(this, new StringEventArgs(name));
 		}

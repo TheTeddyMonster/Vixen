@@ -8,31 +8,7 @@ namespace VixenModules.Property.Color
 	{
 		private ColorData _data;
 
-		public ColorModule()
-		{
-			ColorStaticData.ColorSetChanged += ColorSetChangedHandler;
-		}
-
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing)
-			{
-				ColorStaticData.ColorSetChanged -= ColorSetChangedHandler;	
-			}
-			base.Dispose(disposing);
-		}
-
 		private static NLog.Logger Logging = NLog.LogManager.GetCurrentClassLogger();
-
-		// if the color sets in the static data ("library") change, clear our reference to it,
-		// and re-get it the next time we need it.
-		private void ColorSetChangedHandler(object sender, StringEventArgs e)
-		{
-			ColorData instanceData = (ModuleData as ColorData);
-
-			if (e.Value == instanceData.ColorSetName)
-				_cachedColorSetReference = null;
-		}
 
 		public override void SetDefaultValues()
 		{
@@ -104,11 +80,18 @@ namespace VixenModules.Property.Color
 
 		private ColorSet _cachedColorSetReference = null;
 
+		// The ColorStaticData.ColorSetsVersion seen when the cached color set was read. If the color sets in the
+		// static data ("library") change, the version moves on and the color set is re-read the next time we need it.
+		// This replaces a per-instance subscription to a static event, which kept every ColorModule (and the
+		// element node that owns it) alive for the life of the application.
+		private int _cachedColorSetVersion;
+
 		public ColorSet Colors
 		{
 			get
 			{
-				if (_cachedColorSetReference == null) {
+				if (_cachedColorSetReference == null || _cachedColorSetVersion != ColorStaticData.ColorSetsVersion) {
+					_cachedColorSetVersion = ColorStaticData.ColorSetsVersion;
 					// get the color set from the static module data and cache it
 					ColorStaticData staticData = (StaticModuleData as ColorStaticData);
 					ColorData instanceData = (ModuleData as ColorData);
